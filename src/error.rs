@@ -16,5 +16,5 @@ pub enum Error {
     #[error("Error while parsing Toml: {0:?}")]
     Toml(toml::de::Error),
     #[error("EvaluateTxResult malformed: {0:?}")]
-    EvaluateTxResult(Box<dyn std::error::Error + Send>),
+    EvaluateTxResult(Box<dyn std::error::Error + Send + Sync>),
 }
