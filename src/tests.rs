@@ -64,10 +64,20 @@ async fn protocol_params() -> Result<()> {
 
 #[ignore]
 #[tokio::test]
-async fn my_utxos() -> Result<()> {
+async fn my_utxos_no_count() -> Result<()> {
     let bf = get_test_bf_http_client().unwrap();
     let address = my_base_addr().to_address().to_bech32(None).unwrap();
-    let res = bf.utxos(&address).await.unwrap();
+    let res = bf.utxos(&address, None).await.unwrap();
+    dbg!(&res);
+    Ok(())
+}
+
+#[ignore]
+#[tokio::test]
+async fn my_utxos_with_count() -> Result<()> {
+    let bf = get_test_bf_http_client().unwrap();
+    let address = my_base_addr().to_address().to_bech32(None).unwrap();
+    let res = bf.utxos(&address, Some(10)).await.unwrap();
     dbg!(&res);
     Ok(())
 }
@@ -80,7 +90,7 @@ async fn script_utxos() -> Result<()> {
         .to_bech32(None)
         .unwrap();
     let filtered: Vec<_> = bf
-        .utxos(&address)
+        .utxos(&address, None)
         .await
         .unwrap()
         .into_iter()
@@ -330,7 +340,7 @@ async fn send_to_self() {
     let bf = get_test_bf_http_client().unwrap();
 
     let my_utxos = bf
-        .utxos(&my_address.to_bech32(None).unwrap())
+        .utxos(&my_address.to_bech32(None).unwrap(), None)
         .await
         .unwrap();
 
@@ -375,7 +385,7 @@ async fn init_always_succeeds_contract() {
     let bf = get_test_bf_http_client().unwrap();
 
     let my_utxos = bf
-        .utxos(&my_address.to_bech32(None).unwrap())
+        .utxos(&my_address.to_bech32(None).unwrap(), None)
         .await
         .unwrap();
 
@@ -428,7 +438,7 @@ async fn spend_datum() {
     let bf = get_test_bf_http_client().unwrap();
 
     let my_utxos = bf
-        .utxos(&my_address.to_bech32(None).unwrap())
+        .utxos(&my_address.to_bech32(None).unwrap(), None)
         .await
         .unwrap();
 
