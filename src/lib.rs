@@ -41,7 +41,7 @@ pub trait BlockFrostHttpTrait {
 
     async fn address_info(&self, address: &str) -> Result<AddressInfo>;
 
-    async fn utxos(&self, address: &str) -> Result<Vec<UTxO>>;
+    async fn utxos(&self, address: &str, maybe_count: Option<usize>) -> Result<Vec<UTxO>>;
 
     async fn datum(&self, datum_hash: &str) -> Result<serde_json::Value>;
 
@@ -71,9 +71,16 @@ impl BlockFrostHttpTrait for BlockFrostHttp {
         self.get_endpoint(&ext).await
     }
 
-    async fn utxos(&self, address: &str) -> Result<Vec<UTxO>> {
+    async fn utxos(&self, address: &str, maybe_count: Option<usize>) -> Result<Vec<UTxO>> {
         let ext = format!("./addresses/{}/utxos", address);
-        let params = [("order", "desc")];
+
+        let params = if let Some(count) = maybe_count {
+            let count_str = count.to_string();
+            vec![("order".to_string(), "desc".to_string()), ("count".to_string(), count_str)]
+        } else {
+            // TODO: Paginate response for more than 100
+            vec![("order".to_string(), "desc".to_string())]
+        };
         self.get_endpoint_with_params(&ext, &params).await
     }
 
@@ -143,7 +150,7 @@ impl BlockFrostHttp {
     async fn get_endpoint_with_params<T: DeserializeOwned>(
         &self,
         ext: &str,
-        params: &[(&str, &str)],
+        params: &[(String, String)],
     ) -> Result<T> {
         let mut url = Url::parse(&self.parent_url)?.join(ext)?;
         url.query_pairs_mut().extend_pairs(params);
