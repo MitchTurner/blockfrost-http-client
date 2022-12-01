@@ -3,6 +3,7 @@
 use crate::error::*;
 use serde::Deserialize;
 use std::collections::HashMap;
+use serde_json::Map;
 
 #[derive(Deserialize, Debug)]
 pub struct Genesis {
@@ -168,7 +169,7 @@ pub struct Fault {
 pub struct EvaluateTxResult {
     methodname: Option<String>,
     reflection: HashMap<String, String>,
-    result: Option<Success>,
+    result: Option<RequestResult>,
     fault: Option<HashMap<String, String>>,
     servicename: String,
     r#type: String,
@@ -176,49 +177,68 @@ pub struct EvaluateTxResult {
 }
 
 impl EvaluateTxResult {
-    pub fn get_spends(&self) -> Result<HashMap<u64, Spend>> {
-        let mut spends = HashMap::new();
+    pub fn get_execution_costs(&self) -> Result<HashMap<u64, ExecutionCostsWithType>> {
+        let mut execution_costs = HashMap::new();
         if let Some(result) = &self.result {
-            if let Some(inner) = result.evalutation_result.as_object() {
-                let keys = inner.keys();
-                for key in keys {
-                    if key.contains("spend:") {
-                        if let Some(val) = inner.get(key) {
-                            let index_str = key
-                                .split(':')
-                                .collect::<Vec<_>>()
-                                .get(1)
-                                .unwrap()
-                                .to_owned();
-                            let index = index_str
-                                .parse::<u64>()
-                                .map_err(|e| Error::EvaluateTxResult(Box::new(e)))?;
-                            let serialized = serde_json::to_string(val)
-                                .map_err(|e| Error::EvaluateTxResult(Box::new(e)))?;
-                            let deserialized = serde_json::from_str(&serialized).unwrap();
-                            spends.insert(index, deserialized);
+            if let Some(eval_result) = &result.evaluatation_result {
+                if let Some(inner) = eval_result.as_object() {
+                    let keys = inner.keys();
+                    for key in keys {
+                        if key.contains("spend:") | key.contains("mint:") {
+                            if let Some(val) = inner.get(key) {
+                                let index_str = key
+                                    .split(':')
+                                    .collect::<Vec<_>>()
+                                    .get(1)
+                                    .unwrap()
+                                    .to_owned();
+                                let index = index_str
+                                    .parse::<u64>()
+                                    .map_err(|e| Error::EvaluateTxResult(Box::new(e)))?;
+                                let serialized = serde_json::to_string(val)
+                                    .map_err(|e| Error::EvaluateTxResult(Box::new(e)))?;
+                                let deserialized: ExecutionCosts = serde_json::from_str(&serialized).unwrap();
+
+
+                                if key.contains("spend:") {
+                                    execution_costs.insert(index, deserialized.spend());
+                                }else if key.contains("mint:") {
+                                    execution_costs.insert(index, deserialized.mint());
+                                }
+                            }
                         }
                     }
                 }
+            } else if let Some(eval_failure) = &result.evalutation_failure {
+                todo!()
             }
+
         }
-        Ok(spends)
+        Ok(execution_costs)
     }
 }
 
 #[derive(Deserialize, Debug)]
-pub struct Success {
+pub struct RequestResult {
     #[serde(rename = "EvaluationResult")]
-    evalutation_result: serde_json::Value,
+    evaluatation_result: Option<serde_json::Value>,
+    #[serde(rename = "EvaluationFailure")]
+    evalutation_failure: Option<serde_json::Value>,
+}
+
+#[derive(Clone, Debug)]
+pub enum ExecutionType {
+    Spend,
+    Mint,
 }
 
 #[derive(Deserialize, Debug, Clone)]
-pub struct Spend {
+pub struct ExecutionCosts {
     memory: u64,
     steps: u64,
 }
 
-impl Spend {
+impl ExecutionCosts {
     pub fn memory(&self) -> u64 {
         self.memory
     }
@@ -226,6 +246,43 @@ impl Spend {
         self.steps
     }
 }
+
+impl ExecutionCosts {
+    fn mint(&self) -> ExecutionCostsWithType {
+        ExecutionCostsWithType {
+            execution_type: ExecutionType::Mint,
+            memory: self.memory,
+            steps: self.steps,
+        }
+    }
+
+    fn spend(&self) -> ExecutionCostsWithType {
+        ExecutionCostsWithType {
+            execution_type: ExecutionType::Spend,
+            memory: self.memory,
+            steps: self.steps,
+        }
+    }
+}
+
+pub struct ExecutionCostsWithType {
+    execution_type: ExecutionType,
+    memory: u64,
+    steps: u64,
+}
+impl ExecutionCostsWithType {
+    pub fn memory(&self) -> u64 {
+        self.memory
+    }
+    pub fn steps(&self) -> u64 {
+        self.steps
+    }
+
+    pub fn execution_type(&self) -> ExecutionType {
+        self.execution_type.clone()
+    }
+}
+
 
 #[derive(Deserialize, Debug)]
 pub struct TxSubmitResult(String);

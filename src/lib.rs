@@ -113,7 +113,14 @@ impl BlockFrostHttpTrait for BlockFrostHttp {
             .send()
             .await
             .unwrap();
-        Ok(res.json().await?)
+        // let json: serde_json::Value = res.json().await?;
+        let json = res.json().await?;
+        dbg!(&json);
+        Ok(json)
+        // let json: serde_json::Value = res.clone().json().await?;
+        // dbg!(&json);
+        // todo!()
+        // Ok(res.json().await?)
     }
 
     async fn submit_tx(&self, bytes: &[u8]) -> Result<TxSubmitResult> {
