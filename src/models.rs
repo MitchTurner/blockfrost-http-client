@@ -210,7 +210,7 @@ impl EvaluateTxResult {
                     }
                 }
             } else if let Some(eval_failure) = &result.evalutation_failure {
-                todo!()
+                Err(Error::EvaluateTxResult(eval_failure.to_String()))
             }
 
         }

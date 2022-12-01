@@ -17,4 +17,6 @@ pub enum Error {
     Toml(toml::de::Error),
     #[error("EvaluateTxResult malformed: {0:?}")]
     EvaluateTxResult(Box<dyn std::error::Error + Send + Sync>),
+    #[error("Tx failed to execute: {0:?}")]
+    EvaluateTxFailure(String),
 }
