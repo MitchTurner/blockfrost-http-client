@@ -113,7 +113,8 @@ impl BlockFrostHttpTrait for BlockFrostHttp {
             .send()
             .await
             .unwrap();
-        Ok(res.json().await?)
+        let json = res.json().await?;
+        Ok(json)
     }
 
     async fn submit_tx(&self, bytes: &[u8]) -> Result<TxSubmitResult> {

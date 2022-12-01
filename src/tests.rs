@@ -478,7 +478,7 @@ async fn spend_datum() {
     let transaction = tx_redeemer_builder.draft_tx();
     let bytes = transaction.to_bytes();
     let res = bf.execution_units(&bytes).await.unwrap();
-    for (index, spend) in res.get_spends().unwrap() {
+    for (index, spend) in res.get_execution_costs().unwrap() {
         tx_builder.set_exunits(
             &RedeemerWitnessKey::new(&RedeemerTag::new_spend(), &BigNum::from(index)), // TODO: How do I know which index?
             &ExUnits::new(&spend.memory().into(), &spend.steps().into()),
