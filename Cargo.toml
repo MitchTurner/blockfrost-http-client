@@ -10,7 +10,7 @@ authors = ["Mitchell Turner"]
 
 [dependencies]
 async-trait = "0.1.57"
-cardano-multiplatform-lib = { git = "https://github.com/dcSpark/cardano-multiplatform-lib.git", commit = "685354495562ff879101fd023eb89555db9bbb1e"}
+cardano-multiplatform-lib = { version = "3.1.1", git = "https://github.com/dcSpark/cardano-multiplatform-lib.git", commit = "685354495562ff879101fd023eb89555db9bbb1e"}
 futures = "0.3.23"
 hex = "0.4.3"
 serde = { version = "1.0.143", features = ["derive"] }
