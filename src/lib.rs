@@ -14,7 +14,7 @@ pub mod models;
 pub mod tests;
 
 pub const MAINNET_URL: &str = "https://cardano-mainnet.blockfrost.io/api/v0";
-pub const TEST_URL: &str = "https://cardano-testnet.blockfrost.io/api/v0/";
+pub const PREPROD_NETWORK_URL: &str = "https://cardano-preprod.blockfrost.io/api/v0/";
 
 pub fn load_key_from_file(key_path: &str) -> Result<String> {
     let path = Path::new(key_path);
