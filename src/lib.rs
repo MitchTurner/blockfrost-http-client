@@ -1,7 +1,9 @@
 use crate::models::{
-    Address, AddressInfo, EvaluateTxResult, Genesis, ProtocolParams, TxSubmitResult, UTxO,
+    Address, AddressInfo, EvaluateTxResult, Genesis, HTTPResponse, HttpErrorInner, ProtocolParams,
+    TxSubmitResult, UTxO,
 };
 use async_trait::async_trait;
+use reqwest::Response;
 use serde::de::DeserializeOwned;
 use std::{fs, path::Path};
 use url::Url;
@@ -76,7 +78,10 @@ impl BlockFrostHttpTrait for BlockFrostHttp {
 
         let params = if let Some(count) = maybe_count {
             let count_str = count.to_string();
-            vec![("order".to_string(), "desc".to_string()), ("count".to_string(), count_str)]
+            vec![
+                ("order".to_string(), "desc".to_string()),
+                ("count".to_string(), count_str),
+            ]
         } else {
             // TODO: Paginate response for more than 100
             vec![("order".to_string(), "desc".to_string())]
@@ -113,8 +118,7 @@ impl BlockFrostHttpTrait for BlockFrostHttp {
             .send()
             .await
             .unwrap();
-        let json = res.json().await?;
-        Ok(json)
+        try_deserializing(res).await
     }
 
     async fn submit_tx(&self, bytes: &[u8]) -> Result<TxSubmitResult> {
@@ -130,7 +134,7 @@ impl BlockFrostHttpTrait for BlockFrostHttp {
             .send()
             .await
             .unwrap();
-        Ok(res.json().await?)
+        try_deserializing(res).await
     }
 }
 
@@ -163,7 +167,30 @@ impl BlockFrostHttp {
             .send()
             .await?;
 
-        let res = res.json().await?;
-        Ok(res)
+        try_deserializing(res).await
+    }
+}
+
+async fn try_deserializing<T: DeserializeOwned>(res: Response) -> Result<T> {
+    let full = res.bytes().await.map_err(|e| Error::Reqwest(e))?;
+    let json: serde_json::Value = serde_json::from_slice(&full).unwrap();
+    println!("json: {:?}", json);
+    let response = if let Ok(inner) = serde_json::from_slice(&full) {
+        HTTPResponse::HttpOk(inner)
+    } else {
+        let err: HttpErrorInner = serde_json::from_slice(&full).map_err(|e| Error::SerdeJson(e))?;
+        HTTPResponse::HttpError(err)
+    };
+    match response {
+        HTTPResponse::HttpOk(inner) => Ok(inner),
+        HTTPResponse::HttpError(HttpErrorInner {
+            status_code,
+            error,
+            message,
+        }) => Err(Error::HttpError {
+            status_code,
+            error,
+            message,
+        }),
     }
 }

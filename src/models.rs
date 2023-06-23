@@ -2,8 +2,21 @@
 
 use crate::error::*;
 use serde::Deserialize;
-use std::collections::HashMap;
 use serde_json::Map;
+use std::collections::HashMap;
+
+#[derive(Debug)]
+pub enum HTTPResponse<T> {
+    HttpOk(T),
+    HttpError(HttpErrorInner),
+}
+
+#[derive(Deserialize, Debug)]
+pub struct HttpErrorInner {
+    pub status_code: u16,
+    pub error: String,
+    pub message: String,
+}
 
 #[derive(Deserialize, Debug)]
 pub struct Genesis {
@@ -197,12 +210,12 @@ impl EvaluateTxResult {
                                     .map_err(|e| Error::EvaluateTxResult(Box::new(e)))?;
                                 let serialized = serde_json::to_string(val)
                                     .map_err(|e| Error::EvaluateTxResult(Box::new(e)))?;
-                                let deserialized: ExecutionCosts = serde_json::from_str(&serialized).unwrap();
-
+                                let deserialized: ExecutionCosts =
+                                    serde_json::from_str(&serialized).unwrap();
 
                                 if key.contains("spend:") {
                                     execution_costs.insert(index, deserialized.spend());
-                                }else if key.contains("mint:") {
+                                } else if key.contains("mint:") {
                                     execution_costs.insert(index, deserialized.mint());
                                 }
                             }
@@ -212,7 +225,6 @@ impl EvaluateTxResult {
             } else if let Some(eval_failure) = &result.evalutation_failure {
                 return Err(Error::EvaluateTxFailure(eval_failure.to_string()));
             }
-
         }
         Ok(execution_costs)
     }
@@ -282,7 +294,6 @@ impl ExecutionCostsWithType {
         self.execution_type.clone()
     }
 }
-
 
 #[derive(Deserialize, Debug)]
 pub struct TxSubmitResult(String);
