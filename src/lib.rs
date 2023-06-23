@@ -173,8 +173,8 @@ impl BlockFrostHttp {
 
 async fn try_deserializing<T: DeserializeOwned>(res: Response) -> Result<T> {
     let full = res.bytes().await.map_err(|e| Error::Reqwest(e))?;
-    let json: serde_json::Value = serde_json::from_slice(&full).unwrap();
-    println!("json: {:?}", json);
+    // let json: serde_json::Value = serde_json::from_slice(&full).unwrap();
+    // println!("json: {:?}", json);
     let response = if let Ok(inner) = serde_json::from_slice(&full) {
         HTTPResponse::HttpOk(inner)
     } else {
