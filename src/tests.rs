@@ -54,6 +54,15 @@ async fn genesis() -> Result<()> {
 
 #[ignore]
 #[tokio::test]
+async fn latest_block_info() -> Result<()> {
+    let bf = get_test_bf_http_client().unwrap();
+    let res = bf.latest_block_info().await.unwrap();
+    println!("{:?}", res);
+    Ok(())
+}
+
+#[ignore]
+#[tokio::test]
 async fn protocol_params() -> Result<()> {
     let bf = get_test_bf_http_client().unwrap();
     let epoch = 227;
