@@ -41,7 +41,7 @@ Minimal client
 - [ ] Assets of a specific policy
 
 ### Blocks 
-- [ ] Latest block
+- [x] Latest block
 - [ ] Latest block transactions
 - [ ] Specific block
 - [ ] Listing of next blocks
