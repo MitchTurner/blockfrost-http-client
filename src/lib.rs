@@ -1,7 +1,4 @@
-use crate::models::{
-    Address, AddressInfo, EvaluateTxResult, Genesis, HTTPResponse, HttpErrorInner, ProtocolParams,
-    TxSubmitResult, UTxO,
-};
+use crate::models::{Address, AddressInfo, EvaluateTxResult, Genesis, HTTPResponse, HttpErrorInner, ProtocolParams, TxSubmitResult, UTxO, BlockInfo};
 use async_trait::async_trait;
 use reqwest::Response;
 use serde::de::DeserializeOwned;
@@ -39,6 +36,8 @@ pub struct BlockFrostHttp {
 pub trait BlockFrostHttpTrait {
     async fn genesis(&self) -> Result<Genesis>;
 
+    async fn latest_block_info(&self) -> Result<BlockInfo>;
+
     async fn protocol_params(&self, epoch: u32) -> Result<ProtocolParams>;
 
     async fn address_info(&self, address: &str) -> Result<AddressInfo>;
@@ -61,6 +60,11 @@ impl BlockFrostHttpTrait for BlockFrostHttp {
     async fn genesis(&self) -> Result<Genesis> {
         let ext = "./genesis";
         self.get_endpoint(ext).await
+    }
+
+    async fn latest_block_info(&self) -> Result<BlockInfo> {
+        let ext = "./blocks/latest";
+        self.get_endpoint(&ext).await
     }
 
     async fn protocol_params(&self, epoch: u32) -> Result<ProtocolParams> {
@@ -148,11 +152,11 @@ impl BlockFrostHttp {
         }
     }
 
-    async fn get_endpoint<T: DeserializeOwned>(&self, ext: &str) -> Result<T> {
+    async fn get_endpoint<T: DeserializeOwned + std::fmt::Debug>(&self, ext: &str) -> Result<T> {
         self.get_endpoint_with_params(ext, &[]).await
     }
 
-    async fn get_endpoint_with_params<T: DeserializeOwned>(
+    async fn get_endpoint_with_params<T: DeserializeOwned + std::fmt::Debug>(
         &self,
         ext: &str,
         params: &[(String, String)],
@@ -171,15 +175,17 @@ impl BlockFrostHttp {
     }
 }
 
-async fn try_deserializing<T: DeserializeOwned>(res: Response) -> Result<T> {
+async fn try_deserializing<T: DeserializeOwned + std::fmt::Debug>(res: Response) -> Result<T> {
     let full = res.bytes().await.map_err(|e| Error::Reqwest(e))?;
-    // let json: serde_json::Value = serde_json::from_slice(&full).unwrap();
-    // println!("json: {:?}", json);
+    let json: serde_json::Value = serde_json::from_slice(&full).unwrap();
+    println!("json: {:?}", json);
     let response = if let Ok(inner) = serde_json::from_slice(&full) {
         HTTPResponse::HttpOk(inner)
-    } else {
-        let err: HttpErrorInner = serde_json::from_slice(&full).map_err(|e| Error::SerdeJson(e))?;
+    } else if let Ok(err) = serde_json::from_slice(&full) {
         HTTPResponse::HttpError(err)
+    } else {
+        let err = serde_json::from_slice::<T>(&full).map_err(|e| Error::SerdeJson(e)).unwrap_err();
+        return Err(err);
     };
     match response {
         HTTPResponse::HttpOk(inner) => Ok(inner),

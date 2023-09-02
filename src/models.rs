@@ -32,6 +32,27 @@ pub struct Genesis {
     security_param: u32,
 }
 
+#[derive(Deserialize, Debug)]
+pub struct BlockInfo {
+    time: u64,
+    height: u64,
+    hash: String,
+    slot: u64,
+    epoch: u64,
+    epoch_slot: u64,
+    slot_leader: String,
+    size: u64,
+    tx_count: u64,
+    output: Option<String>,
+    fees: Option<String>,
+    block_vrf: String,
+    op_cert: String,
+    op_cert_counter: String,
+    previous_block: String,
+    next_block: Option<String>,
+    confirmations: u64,
+}
+
 #[allow(non_snake_case)]
 #[derive(Deserialize, Debug)]
 pub struct CostModels {
