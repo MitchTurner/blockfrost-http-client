@@ -1,4 +1,8 @@
-use crate::models::{Address, AddressInfo, EvaluateTxResult, Genesis, HTTPResponse, HttpErrorInner, ProtocolParams, TxSubmitResult, UTxO, BlockInfo};
+#![deny(unused_crate_dependencies)]
+use crate::models::{
+    Address, AddressInfo, BlockInfo, EvaluateTxResult, Genesis, HTTPResponse, HttpErrorInner,
+    ProtocolParams, TxSubmitResult, UTxO,
+};
 use async_trait::async_trait;
 use reqwest::Response;
 use serde::de::DeserializeOwned;
@@ -184,7 +188,9 @@ async fn try_deserializing<T: DeserializeOwned + std::fmt::Debug>(res: Response)
     } else if let Ok(err) = serde_json::from_slice(&full) {
         HTTPResponse::HttpError(err)
     } else {
-        let err = serde_json::from_slice::<T>(&full).map_err(|e| Error::SerdeJson(e)).unwrap_err();
+        let err = serde_json::from_slice::<T>(&full)
+            .map_err(|e| Error::SerdeJson(e))
+            .unwrap_err();
         return Err(err);
     };
     match response {
