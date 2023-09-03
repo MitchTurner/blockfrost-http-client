@@ -53,6 +53,75 @@ pub struct BlockInfo {
     confirmations: u64,
 }
 
+impl BlockInfo {
+    pub fn time(&self) -> u64 {
+        self.time
+    }
+    pub fn height(&self) -> u64 {
+        self.height
+    }
+
+    pub fn hash(&self) -> &str {
+        &self.hash
+    }
+
+    pub fn slot(&self) -> u64 {
+        self.slot
+    }
+
+    pub fn epoch(&self) -> u64 {
+        self.epoch
+    }
+
+    pub fn epoch_slot(&self) -> u64 {
+        self.epoch_slot
+    }
+
+    pub fn slot_leader(&self) -> &str {
+        &self.slot_leader
+    }
+
+    pub fn size(&self) -> u64 {
+        self.size
+    }
+
+    pub fn tx_count(&self) -> u64 {
+        self.tx_count
+    }
+
+    pub fn output(&self) -> &Option<String> {
+        &self.output
+    }
+
+    pub fn fees(&self) -> &Option<String> {
+        &self.fees
+    }
+
+    pub fn block_vrf(&self) -> &str {
+        &self.block_vrf
+    }
+
+    pub fn op_cert(&self) -> &str {
+        &self.op_cert
+    }
+
+    pub fn op_cert_counter(&self) -> &str {
+        &self.op_cert_counter
+    }
+
+    pub fn previous_block(&self) -> &str {
+        &self.previous_block
+    }
+
+    pub fn next_block(&self) -> &Option<String> {
+        &self.next_block
+    }
+
+    pub fn confirmations(&self) -> u64 {
+        self.confirmations
+    }
+}
+
 #[allow(non_snake_case)]
 #[derive(Deserialize, Debug)]
 pub struct CostModels {
