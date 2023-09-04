@@ -5,6 +5,7 @@ version = "0.0.14"
 edition = "2021"
 license = "Apache-2.0"
 authors = ["Mitchell Turner"]
+repository = "https://github.com/MitchTurner/blockfrost-http-client"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
